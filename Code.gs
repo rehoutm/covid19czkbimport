@@ -10,7 +10,8 @@ function main() {
   var parts = getDocumentParts(docId);
   var treeRoot = buildTree(parts);
   for (var index in treeRoot.children) {
-    createCollection(treeRoot.children[index]);
+    var number = 1;
+    createCollection(treeRoot.children[index], number++);
   }
 }
 
@@ -35,9 +36,9 @@ function createDocument(item, collectionId, parentDocumentId) {
   return response.data.id;
 }
 
-function createCollection(item) {
+function createCollection(item, number) {
   var data = {
-    name: item.heading
+    name: number + ". " + item.heading
   };
   var response = makeRequest("collections.create", data);
   var collectionId = response.data.id;
@@ -104,7 +105,6 @@ function getDocumentParts(docId) {
           item.path = currentPath;
           currentItem = item;
           item.children = [];
-          item.text = "";
           items[item.path] = item;
         }
       }
@@ -118,7 +118,7 @@ function appendListItem(targetItem, sourceItem) {
 }
 
 function appendText(targetItem, sourceItem) {
-  return targetItem.text + "\n\n" + sourceItem.text;
+  return targetItem.text + "\n" + sourceItem.text;
 }
 
 function processElement(element) {
@@ -139,7 +139,7 @@ function processListItem(li) {
   return {
     type: "L",
     level: li.getNestingLevel(),
-    text: li.getText(),
+    text: "# " + li.getText() + "\n",
     heading: li.getText(),
     listId: li.getListId()
   }
