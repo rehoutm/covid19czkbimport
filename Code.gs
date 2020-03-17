@@ -16,11 +16,16 @@ function getDocumentParts(docId) {
 function processElement(element) {
   var type = element.getType();
   switch (type) {
-    case DocumentApp.ElementType.PARAGRAPH: processParagraph(element.asParagraph()); break;
+    case DocumentApp.ElementType.PARAGRAPH:
+      var paragraph = element.asParagraph();
+      processParagraph(paragraph);
+      break;
   }
 }
 
 function processParagraph(paragraph) {
   var heading = paragraph.getHeading();
+  var attrs = paragraph.getAttributes();
+  var text = paragraph.getText();
   Logger.log(heading);
 }
