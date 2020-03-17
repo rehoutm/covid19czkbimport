@@ -9,16 +9,16 @@ function main() {
   var docId = '1kIBuO3ex99YEFQQmLLuOR3BEneg-ICt8JJxVAJ1HOP8';
   var parts = getDocumentParts(docId);
   var treeRoot = buildTree(parts);
+  var number = 1;
   for (var index in treeRoot.children) {
-    var number = 1;
     createCollection(treeRoot.children[index], number++);
   }
 }
 
 function importDocuments(items, collectionId, parentDocumentId) {
+  var number = 1;
   for (var index in items) {
     var item = items[index];
-    var number = 1;
     var documentId = createDocument(item, collectionId, parentDocumentId, number++);
     Logger.log("Document " + documentId + ": " + item.heading);
     importDocuments(item.children, collectionId, documentId);
@@ -29,7 +29,7 @@ function createDocument(item, collectionId, parentDocumentId, number) {
   var data = {
     collectionId: collectionId,
     parentDocumentId: parentDocumentId,
-    title: number + "." + item.heading,
+    title: (number + ". " + item.heading).substring(0, 100),
     text: item.text,
     publish: true
   };
@@ -39,7 +39,7 @@ function createDocument(item, collectionId, parentDocumentId, number) {
 
 function createCollection(item, number) {
   var data = {
-    name: number + ". " + item.heading
+    name: (number + ". " + item.heading).substring(0, 100)
   };
   var response = makeRequest("collections.create", data);
   var collectionId = response.data.id;
