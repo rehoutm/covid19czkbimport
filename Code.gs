@@ -7,10 +7,40 @@ function getDocumentParts(docId) {
   var doc = DocumentApp.openById(docId);
   var body = doc.getBody();
   var elements = body.getNumChildren();
+  var currentItem = null;
+  var currentPath = "";
+  var items = [];
+  //asociativni pole cesta -> item
   for (var i = 0; i < elements; i++) {
     var element = body.getChild(i);
     var item = processElement(element);
+    if (item != null) {
+      if (currentItem == null && item.type == "H") {
+        currentItem = item;
+      }
+      if (item.type == "P") {
+        appendText(currentItem, item);
+      }
+      else if (item.type == "H" && item.listId == currentItem.listId) {
+        if (item.level > currentItem.level) {
+          //pokracujeme
+        }
+        else if (item.level == currentItem.level) {
+          currentPath = currentPath.substr(0, currentPath.lastIndexOf("/"));
+        }
+        else {
+          for (var x = 0; x <= currentItem.level - item.level; x++) {
+            currentPath = currentPath.substr(0, currentPath.lastIndexOf("/"));
+          }
+        }
+        currentPath = currentPath + "/" + item.text.replace("/", "");
+        items[currentPath] = currentItem = item;
+      }
+    }
   }
+}
+
+function appendText(targetItem, sourceItem) {
 }
 
 function processElement(element) {
@@ -18,32 +48,28 @@ function processElement(element) {
   switch (type) {
     case DocumentApp.ElementType.PARAGRAPH:
       var paragraph = element.asParagraph();
-      processParagraph(paragraph);
-      break;
+      return processParagraph(paragraph);
     case DocumentApp.ElementType.LIST_ITEM:
       var li = element.asListItem();
-      //list items jsou pouzivane jako nadpisy, tedy v tomto bloku bude nutne vyresit zanoreni/vynoreni v ramci finalni struktury
-      processListItem(li);
+      return processListItem(li);
     default:
       Logger.log(type);
   }
 }
 
 function processListItem(li) {
-  var text = li.getText();
-  var level = li.get
+  return {
+    type: "H",
+    level: li.getNestingLevel(),
+    text: li.getText(),
+    listId: li.getListId()
+  }
 }
 
 function processParagraph(paragraph) {
-  var heading = paragraph.getHeading();
-  var attrs = paragraph.getAttributes();
-  var headingAttribute = attrs[DocumentApp.Attribute.HEADING];
   var text = paragraph.getText();
-  if (text.indexOf("Příznaky") > -1) {
-    Logger.log({
-      text: text,
-      attrs: attrs
-    });
+  return {
+    type: "P",
+    text: text
   }
-  Logger.log(headingAttribute);
 }
