@@ -18,17 +18,18 @@ function main() {
 function importDocuments(items, collectionId, parentDocumentId) {
   for (var index in items) {
     var item = items[index];
-    var documentId = createDocument(item, collectionId, parentDocumentId);
+    var number = 1;
+    var documentId = createDocument(item, collectionId, parentDocumentId, number++);
     Logger.log("Document " + documentId + ": " + item.heading);
     importDocuments(item.children, collectionId, documentId);
   }
 }
 
-function createDocument(item, collectionId, parentDocumentId) {
+function createDocument(item, collectionId, parentDocumentId, number) {
   var data = {
     collectionId: collectionId,
     parentDocumentId: parentDocumentId,
-    title: item.heading,
+    title: number + "." + item.heading,
     text: item.text,
     publish: true
   };
