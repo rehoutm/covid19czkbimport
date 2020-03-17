@@ -1,3 +1,13 @@
+/*
+v rychlosti pripraveno zatim jednoduche parsovani GDoc dokumentu do ploche struktury - polozky maji “cestu” slozenou ze struktury nadpisu oddelenych lomitkem - dle toho bude mozne dale pracovat
+je potreba dodelat:
+- samotne zpracovani textu (paragraph)
+- zpracovani tabulek
+- zpracovani nested listu (v dokumentu je vseho vsudy jeden, problem je, ze se musi zpracovat nejakou oklikou, protoze jako list se defaultne zpracovava struktura nadpisu)
+*/
+
+
+
 function main() {
   var docId = '1kIBuO3ex99YEFQQmLLuOR3BEneg-ICt8JJxVAJ1HOP8';
   var parts = getDocumentParts(docId);
