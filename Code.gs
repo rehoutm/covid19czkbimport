@@ -20,12 +20,30 @@ function processElement(element) {
       var paragraph = element.asParagraph();
       processParagraph(paragraph);
       break;
+    case DocumentApp.ElementType.LIST_ITEM:
+      var li = element.asListItem();
+      //list items jsou pouzivane jako nadpisy, tedy v tomto bloku bude nutne vyresit zanoreni/vynoreni v ramci finalni struktury
+      processListItem(li);
+    default:
+      Logger.log(type);
   }
+}
+
+function processListItem(li) {
+  var text = li.getText();
+  var level = li.get
 }
 
 function processParagraph(paragraph) {
   var heading = paragraph.getHeading();
   var attrs = paragraph.getAttributes();
+  var headingAttribute = attrs[DocumentApp.Attribute.HEADING];
   var text = paragraph.getText();
-  Logger.log(heading);
+  if (text.indexOf("Příznaky") > -1) {
+    Logger.log({
+      text: text,
+      attrs: attrs
+    });
+  }
+  Logger.log(headingAttribute);
 }
