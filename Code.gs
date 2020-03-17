@@ -3,41 +3,57 @@ v rychlosti pripraveno zatim jednoduche parsovani GDoc dokumentu do ploche struk
 je potreba dodelat:
 - zpracovani tabulek
 - zpracovani formatovani
-- API calls pro import
 */
 
 function main() {
   var docId = '1kIBuO3ex99YEFQQmLLuOR3BEneg-ICt8JJxVAJ1HOP8';
   var parts = getDocumentParts(docId);
   var treeRoot = buildTree(parts);
-  importTree(treeRoot);
-}
-
-function importTree(treeRoot) {
   for (var index in treeRoot.children) {
-    var item = treeRoot.children[index];
-    var collectionId = createCollection(item.text);
-    importDocuments(item.children, collectionId);
+    createCollection(treeRoot.children[index]);
   }
 }
 
-function importDocuments(items, parentId) {
+function importDocuments(items, collectionId, parentDocumentId) {
   for (var index in items) {
     var item = items[index];
-    var documentId = createDocument(item, parentId);
+    var documentId = createDocument(item, collectionId, parentDocumentId);
     Logger.log("Document " + documentId + ": " + item.heading);
-    importDocuments(item.children, documentId);
+    importDocuments(item.children, collectionId, documentId);
   }
 }
 
-function createDocument(item) {
-  //TODO API call to create document
-  return "documentId";
+function createDocument(item, collectionId, parentDocumentId) {
+  var data = {
+    collectionId: collectionId,
+    parentDocumentId: parentDocumentId,
+    title: item.heading,
+    text: item.text,
+    publish: true
+  };
+  var response = makeRequest("documents.create", data);
+  return response.data.id;
 }
 
 function createCollection(item) {
-  //TODO API call to create collection
-  return "collectionId";
+  var data = {
+    name: item.heading
+  };
+  var response = makeRequest("collections.create", data);
+  var collectionId = response.data.id;
+  Logger.log("Collection " + collectionId + ": " + item.heading);
+  importDocuments(item.children, collectionId);
+}
+
+function makeRequest(resource, data) {
+  data.token = "vJbw1heiKiZwzThhjbltf7V4xV1DouUDCBlvoT";
+  var response = UrlFetchApp.fetch("https://www.getoutline.com/api/" + resource, {
+    'method': 'post',
+    'contentType': 'application/json',
+    'payload' : JSON.stringify(data)
+  });
+  var text = response.getContentText("UTF-8");
+  return JSON.parse(text);
 }
 
 function buildTree(parts) {
@@ -115,7 +131,7 @@ function processElement(element) {
       var li = element.asListItem();
       return processListItem(li);
     default:
-      Logger.log(type);
+      Logger.log("Skipping type " + type);
   }
 }
 
