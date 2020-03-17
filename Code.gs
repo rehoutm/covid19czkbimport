@@ -11,6 +11,7 @@ je potreba dodelat:
 function main() {
   var docId = '1kIBuO3ex99YEFQQmLLuOR3BEneg-ICt8JJxVAJ1HOP8';
   var parts = getDocumentParts(docId);
+  //TODO - imports parts
 }
 
 function getDocumentParts(docId) {
@@ -25,32 +26,40 @@ function getDocumentParts(docId) {
     var element = body.getChild(i);
     var item = processElement(element);
     if (item != null) {
-      if (currentItem == null && item.type == "H") {
+      if (currentItem == null && item.type == "L") {
         currentItem = item;
       }
-      if (item.type == "P") {
-        appendText(currentItem, item);
+      if (currentItem != null && item.type == "P") {
+        currentItem.text = appendText(currentItem, item);
       }
-      else if (item.type == "H" && item.listId == currentItem.listId) {
-        if (item.level > currentItem.level) {
-          //pokracujeme
-        }
-        else if (item.level == currentItem.level) {
-          currentPath = currentPath.substr(0, currentPath.lastIndexOf("/"));
+      else if (item.type == "L") {
+        if (item.listId != currentItem.listId) {
+          currentItem.text = appendListItem(currentItem, item);
         }
         else {
-          for (var x = 0; x <= currentItem.level - item.level; x++) {
+          if (item.level == currentItem.level) {
             currentPath = currentPath.substr(0, currentPath.lastIndexOf("/"));
           }
+          else if (item.level < currentItem.level) {
+            for (var x = 0; x <= currentItem.level - item.level; x++) {
+              currentPath = currentPath.substr(0, currentPath.lastIndexOf("/"));
+            }
+          }
+          currentPath = currentPath + "/" + item.text.replace("/", "");
+          items[currentPath] = currentItem = item;
         }
-        currentPath = currentPath + "/" + item.text.replace("/", "");
-        items[currentPath] = currentItem = item;
       }
     }
   }
+  return items;
+}
+
+function appendListItem(targetItem, sourceItem) {
+  return targetItem.text + "\n" + " * " + sourceItem.text;
 }
 
 function appendText(targetItem, sourceItem) {
+  return targetItem.text + "\n\n" + sourceItem.text;
 }
 
 function processElement(element) {
@@ -69,7 +78,7 @@ function processElement(element) {
 
 function processListItem(li) {
   return {
-    type: "H",
+    type: "L",
     level: li.getNestingLevel(),
     text: li.getText(),
     listId: li.getListId()
