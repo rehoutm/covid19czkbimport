@@ -1,27 +1,65 @@
 /*
 v rychlosti pripraveno zatim jednoduche parsovani GDoc dokumentu do ploche struktury - polozky maji “cestu” slozenou ze struktury nadpisu oddelenych lomitkem - dle toho bude mozne dale pracovat
 je potreba dodelat:
-- samotne zpracovani textu (paragraph)
 - zpracovani tabulek
-- zpracovani formatovano
+- zpracovani formatovani
+- API calls pro import
 */
-
-
 
 function main() {
   var docId = '1kIBuO3ex99YEFQQmLLuOR3BEneg-ICt8JJxVAJ1HOP8';
   var parts = getDocumentParts(docId);
-  //TODO - imports parts
+  var treeRoot = buildTree(parts);
+  importTree(treeRoot);
+}
+
+function importTree(treeRoot) {
+  for (var index in treeRoot.children) {
+    var item = treeRoot.children[index];
+    var collectionId = createCollection(item.text);
+    importDocuments(item.children, collectionId);
+  }
+}
+
+function importDocuments(items, parentId) {
+  for (var index in items) {
+    var item = items[index];
+    var documentId = createDocument(item, parentId);
+    Logger.log("Document " + documentId + ": " + item.heading);
+    importDocuments(item.children, documentId);
+  }
+}
+
+function createDocument(item) {
+  //TODO API call to create document
+  return "documentId";
+}
+
+function createCollection(item) {
+  //TODO API call to create collection
+  return "collectionId";
+}
+
+function buildTree(parts) {
+  for (var index in parts) {
+    var item = parts[index];
+    if (parts[item.parent] !== undefined) {
+      parts[item.parent].children.push(item);
+    }
+  }
+  return parts["/"];
 }
 
 function getDocumentParts(docId) {
   var doc = DocumentApp.openById(docId);
   var body = doc.getBody();
   var elements = body.getNumChildren();
+  var items = [];
+  items["/"] = {
+    children: []
+  };
   var currentItem = null;
   var currentPath = "";
-  var items = [];
-  //asociativni pole cesta -> item
   for (var i = 0; i < elements; i++) {
     var element = body.getChild(i);
     var item = processElement(element);
@@ -45,8 +83,13 @@ function getDocumentParts(docId) {
               currentPath = currentPath.substr(0, currentPath.lastIndexOf("/"));
             }
           }
-          currentPath = currentPath + "/" + item.text.replace("/", "");
-          items[currentPath] = currentItem = item;
+          item.parent = currentPath === "" ? "/" : currentPath;
+          currentPath = currentPath + "/" + item.heading.replace("/", "").trim();
+          item.path = currentPath;
+          currentItem = item;
+          item.children = [];
+          item.text = "";
+          items[item.path] = item;
         }
       }
     }
@@ -81,6 +124,7 @@ function processListItem(li) {
     type: "L",
     level: li.getNestingLevel(),
     text: li.getText(),
+    heading: li.getText(),
     listId: li.getListId()
   }
 }
