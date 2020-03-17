@@ -3,7 +3,7 @@ v rychlosti pripraveno zatim jednoduche parsovani GDoc dokumentu do ploche struk
 je potreba dodelat:
 - samotne zpracovani textu (paragraph)
 - zpracovani tabulek
-- zpracovani nested listu (v dokumentu je vseho vsudy jeden, problem je, ze se musi zpracovat nejakou oklikou, protoze jako list se defaultne zpracovava struktura nadpisu)
+- zpracovani formatovano
 */
 
 
