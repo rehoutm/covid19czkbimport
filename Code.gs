@@ -1,15 +1,19 @@
 /*
-v rychlosti pripraveno zatim jednoduche parsovani GDoc dokumentu do ploche struktury - polozky maji “cestu” slozenou ze struktury nadpisu oddelenych lomitkem - dle toho bude mozne dale pracovat
 je potreba dodelat:
 - zpracovani tabulek
-- zpracovani formatovani
+- zpracovani formatovani - momentalne vyresene pouze odstavec se stylem nadpisu
 */
 
 function main() {
   var docId = '1kIBuO3ex99YEFQQmLLuOR3BEneg-ICt8JJxVAJ1HOP8';
   var parts = getDocumentParts(docId);
+  importKb(parts);
+}
+
+function importKb(parts) {
   var treeRoot = buildTree(parts);
   var number = 1;
+  wipeCollections();
   for (var index in treeRoot.children) {
     createCollection(treeRoot.children[index], number++);
   }
@@ -30,7 +34,7 @@ function createDocument(item, collectionId, parentDocumentId, number) {
     collectionId: collectionId,
     parentDocumentId: parentDocumentId,
     title: (number + ". " + item.heading).substring(0, 100),
-    text: item.text,
+    text: "# " + item.heading + "\n" + item.text,
     publish: true
   };
   var response = makeRequest("documents.create", data);
@@ -45,6 +49,16 @@ function createCollection(item, number) {
   var collectionId = response.data.id;
   Logger.log("Collection " + collectionId + ": " + item.heading);
   importDocuments(item.children, collectionId);
+}
+
+function wipeCollections() {
+  var collections = makeRequest("collections.list", {});
+  for (var index in collections.data) {
+    var collection = collections.data[index];
+    if (collection.name != "Welcome") {
+      makeRequest("collections.delete", {id: collection.id});
+    }
+  }
 }
 
 function makeRequest(resource, data) {
@@ -115,11 +129,12 @@ function getDocumentParts(docId) {
 }
 
 function appendListItem(targetItem, sourceItem) {
-  return targetItem.text + "\n" + " * " + sourceItem.text;
+  return targetItem.text + "\n" + " * " + sourceItem.heading;
 }
 
 function appendText(targetItem, sourceItem) {
-  return targetItem.text + "\n" + sourceItem.text;
+  var text = sourceItem.text;
+  return targetItem.text + "\n" + text;
 }
 
 function processElement(element) {
@@ -140,7 +155,7 @@ function processListItem(li) {
   return {
     type: "L",
     level: li.getNestingLevel(),
-    text: "# " + li.getText() + "\n",
+    text: "",
     heading: li.getText(),
     listId: li.getListId()
   }
@@ -148,6 +163,15 @@ function processListItem(li) {
 
 function processParagraph(paragraph) {
   var text = paragraph.getText();
+  var h = paragraph.getHeading();
+  switch (h) {
+    case DocumentApp.ParagraphHeading.HEADING1: text = "# " + text; break;
+    case DocumentApp.ParagraphHeading.HEADING2: text = "## " + text; break;
+    case DocumentApp.ParagraphHeading.HEADING3: text = "### " + text; break;
+    case DocumentApp.ParagraphHeading.HEADING4: text = "#### " + text; break;
+    case DocumentApp.ParagraphHeading.HEADING5: text = "##### " + text; break;
+    case DocumentApp.ParagraphHeading.HEADING6: text = "###### " + text; break;
+  }
   return {
     type: "P",
     text: text
